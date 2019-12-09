@@ -34,12 +34,12 @@ static void Uart_IRQHandler_Deal(Uart_Port uartx);  //串口中断处理
 //}
 
 /*重定义fputc函数*/
-int fputc(int ch, FILE *f)
-{
-	while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
-    USART_SendData(USART1, (uint8_t)ch);
-	return ch;
-}
+//int fputc(int ch, FILE *f)
+//{
+//	while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
+//    USART_SendData(USART1, (uint8_t)ch);
+//	return ch;
+//}
 #endif
 
 //串口初始化
@@ -100,13 +100,13 @@ void Uart_Init(Uart_Port uartx, uint32_t baudrate, uint32_t rxbuf_size, uint32_t
         Uart_UartInit(&Uart_ConfigList[uartx].Uart_Uart);
         Uart_NVICInit(&Uart_ConfigList[uartx].Uart_NVIC);
         
-        printf("Uart_ConfigList size : %d byte\r\n", sizeof(Uart_ConfigList));
-        printf("uartx : %d, USARTx adr : 0x%x\r\n", uartx, (uint32_t)Uart_PortInfoList[uartx].USARTx);
-        printf("DMAy_Channelx_Tx adr : 0x%x, DMAy_Channelx_Rx adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].DMAy_Channelx_Tx, (uint32_t)Uart_PortInfoList[uartx].DMAy_Channelx_Rx);
-        printf("pbuffer_queue_Rx adr : 0x%x, pbuffer_queue_Rx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Rx, (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Rx->pdata);
-        printf("pframe_queue_Rx adr : 0x%x, pframe_queue_Rx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Rx, (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Rx->pdata);
-        printf("pbuffer_queue_Tx adr : 0x%x, pbuffer_queue_Tx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Tx, (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Tx->pdata);
-        printf("pframe_queue_Tx adr : 0x%x, pframe_queue_Tx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Tx, (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Tx->pdata);
+//        printf("Uart_ConfigList size : %d byte\r\n", sizeof(Uart_ConfigList));
+//        printf("uartx : %d, USARTx adr : 0x%x\r\n", uartx, (uint32_t)Uart_PortInfoList[uartx].USARTx);
+//        printf("DMAy_Channelx_Tx adr : 0x%x, DMAy_Channelx_Rx adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].DMAy_Channelx_Tx, (uint32_t)Uart_PortInfoList[uartx].DMAy_Channelx_Rx);
+//        printf("pbuffer_queue_Rx adr : 0x%x, pbuffer_queue_Rx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Rx, (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Rx->pdata);
+//        printf("pframe_queue_Rx adr : 0x%x, pframe_queue_Rx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Rx, (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Rx->pdata);
+//        printf("pbuffer_queue_Tx adr : 0x%x, pbuffer_queue_Tx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Tx, (uint32_t)Uart_PortInfoList[uartx].pbuffer_queue_Tx->pdata);
+//        printf("pframe_queue_Tx adr : 0x%x, pframe_queue_Tx->pdata adr : 0x%x\r\n", (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Tx, (uint32_t)Uart_PortInfoList[uartx].pframe_queue_Tx->pdata);
     }
 }
 
