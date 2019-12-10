@@ -7,7 +7,6 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
-void led(void);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -22,37 +21,32 @@ void led(void);
 //    printf("Current parameters value: file %s on line %d\r\n", (uint8_t *)__FILE__, __LINE__);
 //}
 
-void led(void)
-{
-    Led_GPIO_Write(LED0, LED_TOGGLE);
-}
-
 /* Main program */
 int main(void)
 {
-#if defined STM32_HAL
-	/* STM32 Configure the MPU attributes as Write Through */
-	MPU_Config();
+//#if defined STM32_HAL
+//	/* STM32 Configure the MPU attributes as Write Through */
+//	MPU_Config();
+//    
+//	/* STM32 Enable the CPU Cache */
+//	CPU_CACHE_Enable();
+//	
+//	/* STM32F7xx HAL library initialization */
+//	HAL_Init();
+//#endif
     
-	/* STM32 Enable the CPU Cache */
-	CPU_CACHE_Enable();
-	
-	/* STM32F7xx HAL library initialization */
-	HAL_Init();
-#endif
-    
-	/* Configure the system clock */
-//	CLK_SYSCLK_Config();
-	
-#if defined STM32_STANDARD
-    NVIC_PriorityGroupInit();
-//    SysTick_Init();
-#endif
+//	/* Configure the system clock */
+////	CLK_SYSCLK_Config();
+//	
+//#if defined STM32_STANDARD
+//    NVIC_PriorityGroupInit();
+////    SysTick_Init();
+//#endif
     
 //	Delay_Init(72);  //延时函数基准配置
     Led_GPIO_Init();
     Key_GPIO_Init();
-    TIM3_Init(719, 99, Timer_Update);  //720 * 100 / 72000000 = 0.001s = 1ms
+//    TIM3_Init(719, 99, Timer_Update);  //720 * 100 / 72000000 = 0.001s = 1ms
 //    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1，115200，发送、接收缓存大小200，中断发送模式
 //    Uart_Init(Uart2, 115200, 50, 50, UartTx_Interrupt_Sel);
 //    Uart_Init(Uart3, 9600, 50, 50, UartTx_Interrupt_Sel);
@@ -72,7 +66,7 @@ int main(void)
 	while(1)
 	{
 //        timeout_task_loop();
-        led();
+        Led_GPIO_Write(LED0, LED_TOGGLE);
         rt_thread_mdelay(1000);
 	}
 }
