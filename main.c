@@ -6,16 +6,13 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* 定义线程控制块 */
-static struct rt_thread led1_thread;
-
-/* 定义线程控栈时要求RT_ALIGN_SIZE个字节对齐 */
-ALIGN(RT_ALIGN_SIZE)
-/* 定义线程栈 */
-static rt_uint8_t rt_led1_thread_stack[1024];
+static rt_thread_t led1_thread_t = RT_NULL;
+static rt_thread_t led2_thread_t = RT_NULL;
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
 static void led1_thread_entry(void* parameter);
+static void led2_thread_entry(void* parameter);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -39,6 +36,15 @@ static void led1_thread_entry(void* parameter)
     }
 }
 
+static void led2_thread_entry(void* parameter)
+{
+    while(1)
+    {
+        Led_GPIO_Write(LED1, LED_TOGGLE);
+        rt_thread_mdelay(1000);
+    }
+}
+
 /* Main program */
 int main(void)
 {
@@ -54,11 +60,11 @@ int main(void)
 //#endif
     
 //	/* Configure the system clock */
-////	CLK_SYSCLK_Config();
+//	CLK_SYSCLK_Config();
 //	
 //#if defined STM32_STANDARD
 //    NVIC_PriorityGroupInit();
-////    SysTick_Init();
+//    SysTick_Init();
 //#endif
     
 //	Delay_Init(72);  //延时函数基准配置
@@ -80,15 +86,29 @@ int main(void)
 //    timer_task_start(100, 100, 0, uart_debug_send);
 //    timer_task_start(1000, 1000, 0, led);
     
-    rt_thread_init(&led1_thread,  /* 线程控制块 */
-                   "led1",  /* 线程名字 */
-                   led1_thread_entry,  /* 线程入口函数 */
-                   RT_NULL,  /* 线程入口函数参数 */
-                   &rt_led1_thread_stack[0],  /* 线程栈起始地址 */
-                   sizeof(rt_led1_thread_stack),  /* 线程栈大小 */
-                   3,  /* 线程的优先级 */
-                   20);  /* 线程时间片 */
-    rt_thread_startup(&led1_thread);  /* 启动线程，开启调度 */
+    led1_thread_t =  /* 线程控制块指针 */
+        rt_thread_create( "led1",  /* 线程名字 */
+                         led1_thread_entry,  /* 线程入口函数 */
+                         RT_NULL,  /* 线程入口函数参数 */
+                         512,  /* 线程栈大小 */
+                         3, /* 线程的优先级 */
+                         20); /* 线程时间片 */
+    if (led1_thread_t != RT_NULL)
+        rt_thread_startup(led1_thread_t);  /* 启动线程，开启调度 */
+    else
+        return -1;
+    
+    led2_thread_t =  /* 线程控制块指针 */
+        rt_thread_create( "led2",  /* 线程名字 */
+                         led2_thread_entry,  /* 线程入口函数 */
+                         RT_NULL,  /* 线程入口函数参数 */
+                         512,  /* 线程栈大小 */
+                         4, /* 线程的优先级 */
+                         20); /* 线程时间片 */
+    if (led2_thread_t != RT_NULL)
+        rt_thread_startup(led2_thread_t);  /* 启动线程，开启调度 */
+    else
+        return -1;
     
 	/* Infinite loop */
 //	while(1)
