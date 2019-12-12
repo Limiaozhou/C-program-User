@@ -42,6 +42,7 @@ static void led2_thread_entry(void* parameter)
     {
         Led_GPIO_Write(LED1, LED_TOGGLE);
         rt_thread_mdelay(1000);
+        rt_kprintf("led1_thread running, LED1_TOGGLE\r\n");
     }
 }
 
