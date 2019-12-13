@@ -7,12 +7,12 @@
 /* Private variables ---------------------------------------------------------*/
 /* 定义线程控制块 */
 static rt_thread_t led1_thread_t = RT_NULL;
-static rt_thread_t led2_thread_t = RT_NULL;
+static rt_thread_t key_thread_t = RT_NULL;
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
 static void led1_thread_entry(void* parameter);
-static void led2_thread_entry(void* parameter);
+static void key_thread_entry(void* parameter);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -29,20 +29,70 @@ static void led2_thread_entry(void* parameter);
 
 static void led1_thread_entry(void* parameter)
 {
+    uint32_t i, j;
     while(1)
     {
         Led_GPIO_Write(LED0, LED_TOGGLE);
+        rt_kprintf("led1_thread running, LED0_TOGGLE\n");
+        for(i = 0; i <= 2000; ++i)
+        {
+            for(j = 0; j <= 1000; ++j)
+                ;
+        }
         rt_thread_mdelay(500);
     }
 }
 
-static void led2_thread_entry(void* parameter)
+static void key_thread_entry(void* parameter)
 {
+    rt_err_t uwRet = RT_EOK;
+    static uint8_t cnt = 0, debounce_cnt = 0;
+    static uint8_t suspend_flag = 0, resume_flag = 1;
+    
     while(1)
     {
-        Led_GPIO_Write(LED1, LED_TOGGLE);
-        rt_thread_mdelay(1000);
-        rt_kprintf("led1_thread running, LED1_TOGGLE\r\n");
+        if(!Key_GPIO_Read(KEY1))
+        {
+            if((++debounce_cnt) >= 2)
+            {
+                debounce_cnt = 0;
+                cnt = 0;
+                if(!suspend_flag)
+                {
+                    suspend_flag = 1;
+                    resume_flag = 0;
+                    rt_kprintf("suspend LED1 thread\n", cnt);
+                    uwRet = rt_thread_suspend(led1_thread_t);  /* 挂起LED1线程 */
+                    if (RT_EOK == uwRet)
+                        rt_kprintf("suspend LED1 thread success!\n");
+                    else
+                        rt_kprintf("suspend LED1 thread failure! failure code: 0x%lx\n",uwRet);
+                }
+            }
+        }
+        else
+        {
+            debounce_cnt = 0;
+            ++cnt;
+        }
+        
+        if(cnt >= 200)
+        {
+            cnt = 0;
+            if(!resume_flag)
+            {
+                resume_flag = 1;
+                suspend_flag = 0;
+                rt_kprintf("resume LED1 thread\n");
+                uwRet = rt_thread_resume(led1_thread_t);/* 恢复LED1线程！ */
+                if (RT_EOK == uwRet)
+                    rt_kprintf("resume LED1 thread success!\n");
+                else
+                    rt_kprintf("resume LED1 thread failure! failure code: 0x%lx\n",uwRet);
+            }
+        }
+        
+        rt_thread_mdelay(20);
     }
 }
 
@@ -99,15 +149,15 @@ int main(void)
     else
         return -1;
     
-    led2_thread_t =  /* 线程控制块指针 */
-        rt_thread_create( "led2",  /* 线程名字 */
-                         led2_thread_entry,  /* 线程入口函数 */
-                         RT_NULL,  /* 线程入口函数参数 */
-                         512,  /* 线程栈大小 */
-                         4, /* 线程的优先级 */
-                         20); /* 线程时间片 */
-    if (led2_thread_t != RT_NULL)
-        rt_thread_startup(led2_thread_t);  /* 启动线程，开启调度 */
+    key_thread_t =
+        rt_thread_create( "key",
+                         key_thread_entry,
+                         RT_NULL,
+                         512,
+                         2,
+                         20);
+    if (key_thread_t != RT_NULL)
+        rt_thread_startup(key_thread_t);
     else
         return -1;
     
