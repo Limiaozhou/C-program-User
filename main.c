@@ -5,14 +5,21 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-/* å®šä¹‰çº¿ç¨‹æ§åˆ¶å— */
+/* ¶¨ÒåÏß³Ì¿ØÖÆ¿é */
 static rt_thread_t led1_thread_t = RT_NULL;
-static rt_thread_t key_thread_t = RT_NULL;
+//static rt_thread_t key_thread_t = RT_NULL;
+static rt_thread_t receive_thread_t = RT_NULL;
+static rt_thread_t send_thread_t = RT_NULL;
+
+/* ¶¨ÒåÏûÏ¢¶ÓÁĞ¿ØÖÆ¿é */
+static rt_mq_t test_mq = RT_NULL;
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
 static void led1_thread_entry(void* parameter);
-static void key_thread_entry(void* parameter);
+//static void key_thread_entry(void* parameter);
+static void receive_thread_entry(void* parameter);
+static void send_thread_entry(void* parameter);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -29,25 +36,99 @@ static void key_thread_entry(void* parameter);
 
 static void led1_thread_entry(void* parameter)
 {
-    uint32_t i, j;
+//    uint32_t i, j;
     while(1)
     {
         Led_GPIO_Write(LED0, LED_TOGGLE);
-        rt_kprintf("led1_thread running, LED0_TOGGLE\n");
-        for(i = 0; i <= 2000; ++i)
-        {
-            for(j = 0; j <= 1000; ++j)
-                ;
-        }
+//        rt_kprintf("led1_thread running, LED0_TOGGLE\n");
+//        for(i = 0; i <= 2000; ++i)
+//        {
+//            for(j = 0; j <= 1000; ++j)
+//                ;
+//        }
         rt_thread_mdelay(500);
     }
 }
 
-static void key_thread_entry(void* parameter)
+//static void key_thread_entry(void* parameter)
+//{
+//    rt_err_t uwRet = RT_EOK;
+//    static uint8_t cnt = 0, debounce_cnt = 0;
+//    static uint8_t suspend_flag = 0, resume_flag = 1;
+//    
+//    while(1)
+//    {
+//        if(!Key_GPIO_Read(KEY1))
+//        {
+//            if((++debounce_cnt) >= 2)
+//            {
+//                debounce_cnt = 0;
+//                cnt = 0;
+//                if(!suspend_flag)
+//                {
+//                    suspend_flag = 1;
+//                    resume_flag = 0;
+//                    rt_kprintf("suspend LED1 thread\n", cnt);
+//                    uwRet = rt_thread_suspend(led1_thread_t);  /* ¹ÒÆğLED1Ïß³Ì */
+//                    if (RT_EOK == uwRet)
+//                        rt_kprintf("suspend LED1 thread success!\n");
+//                    else
+//                        rt_kprintf("suspend LED1 thread failure! failure code: 0x%lx\n",uwRet);
+//                }
+//            }
+//        }
+//        else
+//        {
+//            debounce_cnt = 0;
+//            ++cnt;
+//        }
+//        
+//        if(cnt >= 200)
+//        {
+//            cnt = 0;
+//            if(!resume_flag)
+//            {
+//                resume_flag = 1;
+//                suspend_flag = 0;
+//                rt_kprintf("resume LED1 thread\n");
+//                uwRet = rt_thread_resume(led1_thread_t);/* »Ö¸´LED1Ïß³Ì£¡ */
+//                if (RT_EOK == uwRet)
+//                    rt_kprintf("resume LED1 thread success!\n");
+//                else
+//                    rt_kprintf("resume LED1 thread failure! failure code: 0x%lx\n",uwRet);
+//            }
+//        }
+//        
+//        rt_thread_mdelay(20);
+//    }
+//}
+
+static void receive_thread_entry(void* parameter)
 {
     rt_err_t uwRet = RT_EOK;
+    uint32_t r_queue;
+    
+    while(1)
+    {
+        uwRet = rt_mq_recv(test_mq,  /* ¶ÁÈ¡£¨½ÓÊÕ£©¶ÓÁĞµÄID(¾ä±ú) */
+                           &r_queue,  /* ¶ÁÈ¡£¨½ÓÊÕ£©µÄÊı¾İ±£´æÎ»ÖÃ */
+                           sizeof(r_queue),  /* ¶ÁÈ¡£¨½ÓÊÕ£©µÄÊı¾İµÄ³¤¶È */
+                           RT_WAITING_FOREVER);  /* µÈ´ıÊ±¼ä£ºÒ»Ö±µÈ */
+        if (RT_EOK == uwRet)
+            rt_kprintf("±¾´Î½ÓÊÕµ½µÄÊı¾İÊÇ£º%d\n",r_queue);  /* ´®¿ÚÊä³öÖĞÎÄ£¬ÎÄ¼şÒªÎªANSI±àÂë */
+        else
+            rt_kprintf("Êı¾İ½ÓÊÕ³ö´í,´íÎó´úÂë: 0x%lx\n",uwRet);
+        
+        rt_thread_delay(200);
+    }
+}
+
+static void send_thread_entry(void* parameter)
+{
+    rt_err_t uwRet = RT_EOK;
+    uint32_t send_data1 = 1;
+    uint32_t send_data2 = 2;
     static uint8_t cnt = 0, debounce_cnt = 0;
-    static uint8_t suspend_flag = 0, resume_flag = 1;
     
     while(1)
     {
@@ -57,17 +138,11 @@ static void key_thread_entry(void* parameter)
             {
                 debounce_cnt = 0;
                 cnt = 0;
-                if(!suspend_flag)
-                {
-                    suspend_flag = 1;
-                    resume_flag = 0;
-                    rt_kprintf("suspend LED1 thread\n", cnt);
-                    uwRet = rt_thread_suspend(led1_thread_t);  /* æŒ‚èµ·LED1çº¿ç¨‹ */
-                    if (RT_EOK == uwRet)
-                        rt_kprintf("suspend LED1 thread success!\n");
-                    else
-                        rt_kprintf("suspend LED1 thread failure! failure code: 0x%lx\n",uwRet);
-                }
+                uwRet = rt_mq_send(test_mq,  /* Ğ´Èë£¨·¢ËÍ£©¶ÓÁĞµÄID(¾ä±ú) */
+                                   &send_data1,  /* Ğ´Èë£¨·¢ËÍ£©µÄÊı¾İ */
+                                   sizeof(send_data1));  /* Êı¾İµÄ³¤¶È */
+                if (RT_EOK != uwRet)
+                    rt_kprintf("Êı¾İ²»ÄÜ·¢ËÍµ½ÏûÏ¢¶ÓÁĞ£¡´íÎó´úÂë: %lx\n",uwRet);
             }
         }
         else
@@ -76,23 +151,17 @@ static void key_thread_entry(void* parameter)
             ++cnt;
         }
         
-        if(cnt >= 200)
+        if(cnt >= 50)
         {
             cnt = 0;
-            if(!resume_flag)
-            {
-                resume_flag = 1;
-                suspend_flag = 0;
-                rt_kprintf("resume LED1 thread\n");
-                uwRet = rt_thread_resume(led1_thread_t);/* æ¢å¤LED1çº¿ç¨‹ï¼ */
-                if (RT_EOK == uwRet)
-                    rt_kprintf("resume LED1 thread success!\n");
-                else
-                    rt_kprintf("resume LED1 thread failure! failure code: 0x%lx\n",uwRet);
-            }
+            uwRet = rt_mq_send(test_mq,
+                               &send_data2,
+                               sizeof(send_data2));
+            if (RT_EOK != uwRet)
+                rt_kprintf("Êı¾İ²»ÄÜ·¢ËÍµ½ÏûÏ¢¶ÓÁĞ£¡´íÎó´úÂë: %lx\n",uwRet);
         }
         
-        rt_thread_mdelay(20);
+        rt_thread_delay(20);
     }
 }
 
@@ -118,16 +187,16 @@ int main(void)
 //    SysTick_Init();
 //#endif
     
-//	Delay_Init(72);  //å»¶æ—¶å‡½æ•°åŸºå‡†é…ç½®
+//	Delay_Init(72);  //ÑÓÊ±º¯Êı»ù×¼ÅäÖÃ
 //    Led_GPIO_Init();
 //    Key_GPIO_Init();
 //    TIM3_Init(719, 99, Timer_Update);  //720 * 100 / 72000000 = 0.001s = 1ms
-//    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1ï¼Œ115200ï¼Œå‘é€ã€æ¥æ”¶ç¼“å­˜å¤§å°200ï¼Œä¸­æ–­å‘é€æ¨¡å¼
+//    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1£¬115200£¬·¢ËÍ¡¢½ÓÊÕ»º´æ´óĞ¡200£¬ÖĞ¶Ï·¢ËÍÄ£Ê½
 //    Uart_Init(Uart2, 115200, 50, 50, UartTx_Interrupt_Sel);
 //    Uart_Init(Uart3, 9600, 50, 50, UartTx_Interrupt_Sel);
 //    Uart_Init(Uart4, 115200, 50, 50, UartTx_Interrupt_Sel);
 //    Uart_Init(Uart5, 115200, 50, 200, UartTx_Interrupt_Sel);
-//    IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6sæº¢å‡º
+//    IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6sÒç³ö
     
 //    timer_task_start(100, 0, 0, printf_test);
 //    timer_task_start(1000, 1000, 0, IWDG_Feed);
@@ -137,27 +206,58 @@ int main(void)
 //    timer_task_start(100, 100, 0, uart_debug_send);
 //    timer_task_start(1000, 1000, 0, led);
     
-    led1_thread_t =  /* çº¿ç¨‹æ§åˆ¶å—æŒ‡é’ˆ */
-        rt_thread_create( "led1",  /* çº¿ç¨‹åå­— */
-                         led1_thread_entry,  /* çº¿ç¨‹å…¥å£å‡½æ•° */
-                         RT_NULL,  /* çº¿ç¨‹å…¥å£å‡½æ•°å‚æ•° */
-                         512,  /* çº¿ç¨‹æ ˆå¤§å° */
-                         3, /* çº¿ç¨‹çš„ä¼˜å…ˆçº§ */
-                         20); /* çº¿ç¨‹æ—¶é—´ç‰‡ */
+    led1_thread_t =  /* Ïß³Ì¿ØÖÆ¿éÖ¸Õë */
+        rt_thread_create( "led1",  /* Ïß³ÌÃû×Ö */
+                         led1_thread_entry,  /* Ïß³ÌÈë¿Úº¯Êı */
+                         RT_NULL,  /* Ïß³ÌÈë¿Úº¯Êı²ÎÊı */
+                         512,  /* Ïß³ÌÕ»´óĞ¡ */
+                         4, /* Ïß³ÌµÄÓÅÏÈ¼¶ */
+                         20); /* Ïß³ÌÊ±¼äÆ¬ */
     if (led1_thread_t != RT_NULL)
-        rt_thread_startup(led1_thread_t);  /* å¯åŠ¨çº¿ç¨‹ï¼Œå¼€å¯è°ƒåº¦ */
+        rt_thread_startup(led1_thread_t);  /* Æô¶¯Ïß³Ì£¬¿ªÆôµ÷¶È */
     else
         return -1;
     
-    key_thread_t =
-        rt_thread_create( "key",
-                         key_thread_entry,
+//    key_thread_t =
+//        rt_thread_create( "key",
+//                         key_thread_entry,
+//                         RT_NULL,
+//                         512,
+//                         2,
+//                         20);
+//    if (key_thread_t != RT_NULL)
+//        rt_thread_startup(key_thread_t);
+//    else
+//        return -1;
+    
+    test_mq = rt_mq_create("test_mq",  /* ÏûÏ¢¶ÓÁĞÃû×Ö */
+                           40,  /* ÏûÏ¢µÄ×î´ó³¤¶È */
+                           20,  /* ÏûÏ¢¶ÓÁĞµÄ×î´óÈİÁ¿ */
+                           RT_IPC_FLAG_FIFO);  /* ¶ÓÁĞÄ£Ê½ FIFO(0x00)*/
+    if (test_mq != RT_NULL)
+        rt_kprintf("ÏûÏ¢¶ÓÁĞ´´½¨³É¹¦£¡\n\n");
+    
+    receive_thread_t =
+        rt_thread_create( "receive",
+                         receive_thread_entry,
+                         RT_NULL,
+                         512,
+                         3,
+                         20);
+    if (receive_thread_t != RT_NULL)
+        rt_thread_startup(receive_thread_t);
+    else
+        return -1;
+    
+    send_thread_t =
+        rt_thread_create( "send",
+                         send_thread_entry,
                          RT_NULL,
                          512,
                          2,
                          20);
-    if (key_thread_t != RT_NULL)
-        rt_thread_startup(key_thread_t);
+    if (send_thread_t != RT_NULL)
+        rt_thread_startup(send_thread_t);
     else
         return -1;
     
