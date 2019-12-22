@@ -3,6 +3,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#define KEY1_EVENT (0x01 << 0)  //设置事件掩码的位0
+#define KEY2_EVENT (0x01 << 1)  //设置事件掩码的位1
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* 定义线程控制块 */
@@ -18,9 +21,12 @@ static rt_thread_t send_thread_t = RT_NULL;
 //static rt_sem_t test_sem = RT_NULL;
 
 /* 定义互斥量控制块 */
-static rt_mutex_t test_mux = RT_NULL;
+//static rt_mutex_t test_mux = RT_NULL;
 
-uint8_t ucValue [ 2 ] = { 0x00, 0x00 };
+/* 定义事件控制块(句柄) */
+static rt_event_t test_event = RT_NULL;
+
+//uint8_t ucValue [ 2 ] = { 0x00, 0x00 };
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
@@ -115,6 +121,7 @@ static void receive_thread_entry(void* parameter)
 {
 //    rt_err_t uwRet = RT_EOK;
 //    uint32_t r_queue;
+    rt_uint32_t recved;
 //    
 //    while(1)
 //    {
@@ -129,22 +136,22 @@ static void receive_thread_entry(void* parameter)
 //        
 //        rt_thread_delay(200);
 //    }
-    while(1)
-    {
-//        rt_sem_take(test_sem,  /* 获取信号量 */
-//                    RT_WAITING_FOREVER);  /* 等待时间：一直等 */
-        rt_mutex_take(test_mux,  /* 获取互斥量 */
-                      RT_WAITING_FOREVER);  /* 等待时间：一直等 */
-        
-        if ( ucValue [ 0 ] == ucValue [ 1 ] )
-            rt_kprintf ( "Successful\n" );
-        else
-            rt_kprintf ( "Fail\n" );
-        
-//        rt_sem_release( test_sem );  //释放信号量
-        rt_mutex_release( test_mux );  //释放互斥量
-        rt_thread_delay ( 1000 );
-    }
+//    while(1)
+//    {
+////        rt_sem_take(test_sem,  /* 获取信号量 */
+////                    RT_WAITING_FOREVER);  /* 等待时间：一直等 */
+//        rt_mutex_take(test_mux,  /* 获取互斥量 */
+//                      RT_WAITING_FOREVER);  /* 等待时间：一直等 */
+//        
+//        if ( ucValue [ 0 ] == ucValue [ 1 ] )
+//            rt_kprintf ( "Successful\n" );
+//        else
+//            rt_kprintf ( "Fail\n" );
+//        
+////        rt_sem_release( test_sem );  //释放信号量
+//        rt_mutex_release( test_mux );  //释放互斥量
+//        rt_thread_delay ( 1000 );
+//    }
 //    while(1)
 //    {
 //        if(!Key_GPIO_Read(KEY0))
@@ -158,6 +165,18 @@ static void receive_thread_entry(void* parameter)
 //        }
 //        rt_thread_delay ( 20 );
 //    }
+    while(1)
+    {
+        rt_event_recv(test_event,  /* 事件对象句柄 */
+                      KEY1_EVENT | KEY2_EVENT,  /* 接收线程感兴趣的事件 */
+                      RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR,  /* 接收选项 */
+                      RT_WAITING_FOREVER,  /* 指定超时事件,一直等 */
+                      &recved);  /* 指向接收到的事件 */
+        if (recved == (KEY1_EVENT | KEY2_EVENT))  /* 如果接收完成并且正确 */
+            rt_kprintf ( "Key1与Key2都按下\n");
+        else
+            rt_kprintf ( "事件错误！\n");
+    }
 }
 
 static void send_thread_entry(void* parameter)
@@ -200,20 +219,20 @@ static void send_thread_entry(void* parameter)
 //        
 //        rt_thread_delay(20);
 //    }
-    while(1)
-    {
-//        rt_sem_take(test_sem,
-//                    RT_WAITING_FOREVER);
-        rt_mutex_take(test_mux,
-                      RT_WAITING_FOREVER);
-        
-        ucValue [ 0 ] ++;
-        rt_thread_delay ( 100 );
-        ucValue [ 1 ] ++;
-//        rt_sem_release(test_sem);
-        rt_mutex_release(test_mux);
-        rt_thread_yield();  //放弃剩余时间片，进行一次线程切换
-    }
+//    while(1)
+//    {
+////        rt_sem_take(test_sem,
+////                    RT_WAITING_FOREVER);
+//        rt_mutex_take(test_mux,
+//                      RT_WAITING_FOREVER);
+//        
+//        ucValue [ 0 ] ++;
+//        rt_thread_delay ( 100 );
+//        ucValue [ 1 ] ++;
+////        rt_sem_release(test_sem);
+//        rt_mutex_release(test_mux);
+//        rt_thread_yield();  //放弃剩余时间片，进行一次线程切换
+//    }
 //    while(1)
 //    {
 //        if(!Key_GPIO_Read(KEY1))
@@ -226,6 +245,20 @@ static void send_thread_entry(void* parameter)
 //        }
 //        rt_thread_delay(20);
 //    }
+    while(1)
+    {
+        if(!Key_GPIO_Read(KEY0))
+        {
+            rt_kprintf ( "KEY0被单击\n" );
+            rt_event_send(test_event, KEY1_EVENT);
+        }
+        if(!Key_GPIO_Read(KEY1))
+        {
+            rt_kprintf ( "KEY1被单击\n" );
+            rt_event_send(test_event, KEY2_EVENT);
+        }
+        rt_thread_delay(20);
+    }
 }
 
 /* Main program */
@@ -306,9 +339,14 @@ int main(void)
 //    if (test_sem != RT_NULL)
 //        rt_kprintf("信号量创建成功！\n\n");
     
-    test_mux = rt_mutex_create("test_mux",RT_IPC_FLAG_PRIO);
-    if (test_mux != RT_NULL)
-        rt_kprintf("互斥量创建成功！\n\n");
+//    test_mux = rt_mutex_create("test_mux",RT_IPC_FLAG_PRIO);
+//    if (test_mux != RT_NULL)
+//        rt_kprintf("互斥量创建成功！\n\n");
+    
+    test_event = rt_event_create("test_event",  /* 事件标志组名字 */
+                                 RT_IPC_FLAG_PRIO);  /* 事件模式 FIFO(0x00)*/
+    if (test_event != RT_NULL)
+        rt_kprintf("事件创建成功！\n\n");
     
     receive_thread_t =
         rt_thread_create( "receive",
