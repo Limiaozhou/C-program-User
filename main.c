@@ -26,7 +26,13 @@ static rt_thread_t send_thread_t = RT_NULL;
 /* 定义事件控制块(句柄) */
 static rt_event_t test_event = RT_NULL;
 
+/* 定义线软件定时器制块 */
+static rt_timer_t swtmr1 = RT_NULL;
+static rt_timer_t swtmr2 = RT_NULL;
+
 //uint8_t ucValue [ 2 ] = { 0x00, 0x00 };
+static uint32_t TmrCb_Count1 = 0;
+static uint32_t TmrCb_Count2 = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
@@ -34,6 +40,8 @@ static void led1_thread_entry(void* parameter);
 //static void key_thread_entry(void* parameter);
 static void receive_thread_entry(void* parameter);
 static void send_thread_entry(void* parameter);
+static void swtmr1_callback(void* parameter);
+static void swtmr2_callback(void* parameter);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -261,6 +269,26 @@ static void send_thread_entry(void* parameter)
     }
 }
 
+static void swtmr1_callback(void* parameter)
+{
+    uint32_t tick_num1;
+    
+    TmrCb_Count1++;
+    tick_num1 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
+    rt_kprintf("swtmr1_callback函数执行 %d 次\n", TmrCb_Count1);
+    rt_kprintf("滴答定时器数值=%d\n", tick_num1);
+}
+
+static void swtmr2_callback(void* parameter)
+{
+    uint32_t tick_num2;
+    
+    TmrCb_Count2++;
+    tick_num2 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
+    rt_kprintf("swtmr2_callback函数执行 %d 次\n", TmrCb_Count2);
+    rt_kprintf("滴答定时器数值=%d\n", tick_num2);
+}
+
 /* Main program */
 int main(void)
 {
@@ -371,6 +399,22 @@ int main(void)
         rt_thread_startup(send_thread_t);
     else
         return -1;
+    
+    swtmr1 = rt_timer_create("swtmr1_callback",  /* 软件定时器的名称 */
+                             swtmr1_callback,  /* 软件定时器的超时函数 */
+                             0,  /* 定时器超时函数的入口参数 */
+                             5000,  /* 软件定时器的超时时间(周期超时时间) */
+                             RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);  /* 一次模式 软件定时器模式 */
+    if (swtmr1 != RT_NULL)
+        rt_timer_start(swtmr1);
+    
+    swtmr2 = rt_timer_create("swtmr2_callback",
+                             swtmr2_callback,
+                             0,
+                             1000,
+                             RT_TIMER_FLAG_PERIODIC | RT_TIMER_FLAG_SOFT_TIMER);  /* 周期模式 */
+    if (swtmr2 != RT_NULL)
+        rt_timer_start(swtmr2);
     
 	/* Infinite loop */
 //	while(1)
