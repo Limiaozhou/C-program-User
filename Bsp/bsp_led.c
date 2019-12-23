@@ -22,7 +22,7 @@ void Led_GPIO_Init(void)
 			GPIO_InitStruct.GPIO_Pin = Led_GPIO_List[i].Pin;
 			GPIO_Init(Led_GPIO_List[i].GPIOx, &GPIO_InitStruct);
             
-            Led_GPIO_Write((LED_GPIO_Port)i, LED_OFF);  //初始关闭led
+            Led_GPIO_Write((LED_GPIO_Port)i, Led_Off);  //初始关闭led
 		}
 	}
 }
@@ -34,7 +34,7 @@ void Led_GPIO_Write(LED_GPIO_Port ledx, LED_GPIO_OutState state)
     
 	if((ledx < number_of_led) && Led_GPIO_List[ledx].GPIOx)  //端口有效
 	{
-		if(state != LED_TOGGLE)  //不是电平翻转
+		if(state != Led_Toggle)  //不是电平翻转
 		{
 			if(Led_GPIO_List[ledx].active_level == 0)
 				GPIO_WriteBit(Led_GPIO_List[ledx].GPIOx, Led_GPIO_List[ledx].Pin, (BitAction)!state);

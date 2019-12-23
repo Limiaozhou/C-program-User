@@ -28,17 +28,17 @@
 
 typedef enum
 {
-	LED_OFF = 0,
-	LED_ON,
-	LED_TOGGLE  //翻转
+	Led_Off = 0,
+	Led_On,
+	Led_Toggle  //翻转
 }LED_GPIO_OutState;  //LED输出状态
 
 typedef enum
 {
-	LED0 = 0,
-	LED1,
-    LED2,
-    LED3,
+	Led1 = 0,
+	Led2,
+    Led3,
+    Led4,
 	number_of_led
 }LED_GPIO_Port;  //LED端口
 

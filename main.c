@@ -3,8 +3,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define KEY1_EVENT (0x01 << 0)  //设置事件掩码的位0
-#define KEY2_EVENT (0x01 << 1)  //设置事件掩码的位1
+//#define KEY1_EVENT (0x01 << 0)  //设置事件掩码的位0
+//#define KEY2_EVENT (0x01 << 1)  //设置事件掩码的位1
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -24,15 +24,20 @@ static rt_thread_t send_thread_t = RT_NULL;
 //static rt_mutex_t test_mux = RT_NULL;
 
 /* 定义事件控制块(句柄) */
-static rt_event_t test_event = RT_NULL;
+//static rt_event_t test_event = RT_NULL;
 
 /* 定义线软件定时器制块 */
-static rt_timer_t swtmr1 = RT_NULL;
-static rt_timer_t swtmr2 = RT_NULL;
+//static rt_timer_t swtmr1 = RT_NULL;
+//static rt_timer_t swtmr2 = RT_NULL;
+
+/* 定义邮箱控制块 */
+static rt_mailbox_t test_mail = RT_NULL;
 
 //uint8_t ucValue [ 2 ] = { 0x00, 0x00 };
-static uint32_t TmrCb_Count1 = 0;
-static uint32_t TmrCb_Count2 = 0;
+//static uint32_t TmrCb_Count1 = 0;
+//static uint32_t TmrCb_Count2 = 0;
+char test_str1[] = "this is a mail test 1";  /* 邮箱消息test1 */
+char test_str2[] = "this is a mail test 2";  /* 邮箱消息test2 */
 
 /* Private function prototypes -----------------------------------------------*/
 //void printf_test(void);
@@ -40,8 +45,8 @@ static void led1_thread_entry(void* parameter);
 //static void key_thread_entry(void* parameter);
 static void receive_thread_entry(void* parameter);
 static void send_thread_entry(void* parameter);
-static void swtmr1_callback(void* parameter);
-static void swtmr2_callback(void* parameter);
+//static void swtmr1_callback(void* parameter);
+//static void swtmr2_callback(void* parameter);
 
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
@@ -58,16 +63,9 @@ static void swtmr2_callback(void* parameter);
 
 static void led1_thread_entry(void* parameter)
 {
-//    uint32_t i, j;
     while(1)
     {
-        Led_GPIO_Write(LED0, LED_TOGGLE);
-//        rt_kprintf("led1_thread running, LED0_TOGGLE\n");
-//        for(i = 0; i <= 2000; ++i)
-//        {
-//            for(j = 0; j <= 1000; ++j)
-//                ;
-//        }
+        Led_GPIO_Write(Led1, Led_Toggle);
         rt_thread_mdelay(500);
     }
 }
@@ -80,7 +78,7 @@ static void led1_thread_entry(void* parameter)
 //    
 //    while(1)
 //    {
-//        if(!Key_GPIO_Read(KEY1))
+//        if(!Key_GPIO_Read(Key1))
 //        {
 //            if((++debounce_cnt) >= 2)
 //            {
@@ -127,9 +125,10 @@ static void led1_thread_entry(void* parameter)
 
 static void receive_thread_entry(void* parameter)
 {
-//    rt_err_t uwRet = RT_EOK;
+    rt_err_t uwRet = RT_EOK;
 //    uint32_t r_queue;
-    rt_uint32_t recved;
+//    rt_uint32_t recved;
+    char *r_str;
 //    
 //    while(1)
 //    {
@@ -162,7 +161,7 @@ static void receive_thread_entry(void* parameter)
 //    }
 //    while(1)
 //    {
-//        if(!Key_GPIO_Read(KEY0))
+//        if(!Key_GPIO_Read(Key1))
 //        {
 //            uwRet = rt_sem_take(test_sem,  /* 获取信号量 */
 //                                0);  /* 等待时间：0 */
@@ -173,30 +172,40 @@ static void receive_thread_entry(void* parameter)
 //        }
 //        rt_thread_delay ( 20 );
 //    }
+//    while(1)
+//    {
+//        rt_event_recv(test_event,  /* 事件对象句柄 */
+//                      KEY1_EVENT | KEY2_EVENT,  /* 接收线程感兴趣的事件 */
+//                      RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR,  /* 接收选项 */
+//                      RT_WAITING_FOREVER,  /* 指定超时事件,一直等 */
+//                      &recved);  /* 指向接收到的事件 */
+//        if (recved == (KEY1_EVENT | KEY2_EVENT))  /* 如果接收完成并且正确 */
+//            rt_kprintf ( "Key1与Key2都按下\n");
+//        else
+//            rt_kprintf ( "事件错误！\n");
+//    }
     while(1)
     {
-        rt_event_recv(test_event,  /* 事件对象句柄 */
-                      KEY1_EVENT | KEY2_EVENT,  /* 接收线程感兴趣的事件 */
-                      RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR,  /* 接收选项 */
-                      RT_WAITING_FOREVER,  /* 指定超时事件,一直等 */
-                      &recved);  /* 指向接收到的事件 */
-        if (recved == (KEY1_EVENT | KEY2_EVENT))  /* 如果接收完成并且正确 */
-            rt_kprintf ( "Key1与Key2都按下\n");
+        uwRet = rt_mb_recv(test_mail,  /* 邮箱对象句柄 */
+                           (rt_uint32_t*)&r_str,  /* 接收邮箱消息 */
+                           RT_WAITING_FOREVER);  /* 指定超时事件,一直等 */
+        if (RT_EOK == uwRet)  /* 如果接收完成并且正确 */
+            rt_kprintf ( "邮箱的内容是:%s\n\n", r_str);
         else
-            rt_kprintf ( "事件错误！\n");
+            rt_kprintf ( "邮箱接收错误！错误码是0x%x\n",uwRet);
     }
 }
 
 static void send_thread_entry(void* parameter)
 {
-//    rt_err_t uwRet = RT_EOK;
+    rt_err_t uwRet = RT_EOK;
 //    uint32_t send_data1 = 1;
 //    uint32_t send_data2 = 2;
 //    static uint8_t cnt = 0, debounce_cnt = 0;
 //    
 //    while(1)
 //    {
-//        if(!Key_GPIO_Read(KEY1))
+//        if(!Key_GPIO_Read(Key1))
 //        {
 //            if((++debounce_cnt) >= 2)
 //            {
@@ -243,7 +252,7 @@ static void send_thread_entry(void* parameter)
 //    }
 //    while(1)
 //    {
-//        if(!Key_GPIO_Read(KEY1))
+//        if(!Key_GPIO_Read(Key2))
 //        {
 //            uwRet = rt_sem_release(test_sem);
 //            if ( RT_EOK == uwRet )
@@ -253,41 +262,63 @@ static void send_thread_entry(void* parameter)
 //        }
 //        rt_thread_delay(20);
 //    }
+//    while(1)
+//    {
+//        if(!Key_GPIO_Read(Key1))
+//        {
+//            rt_kprintf ( "KEY1被单击\n" );
+//            rt_event_send(test_event, KEY1_EVENT);
+//        }
+//        if(!Key_GPIO_Read(Key2))
+//        {
+//            rt_kprintf ( "KEY2被单击\n" );
+//            rt_event_send(test_event, KEY2_EVENT);
+//        }
+//        rt_thread_delay(20);
+//    }
     while(1)
     {
-        if(!Key_GPIO_Read(KEY0))
-        {
-            rt_kprintf ( "KEY0被单击\n" );
-            rt_event_send(test_event, KEY1_EVENT);
-        }
-        if(!Key_GPIO_Read(KEY1))
+        if(!Key_GPIO_Read(Key1))
         {
             rt_kprintf ( "KEY1被单击\n" );
-            rt_event_send(test_event, KEY2_EVENT);
+            uwRet = rt_mb_send(test_mail, (rt_uint32_t)&test_str1);
+            if (RT_EOK == uwRet)
+                rt_kprintf ( "邮箱消息发送成功\n" );
+            else
+                rt_kprintf ( "邮箱消息发送失败\n" );
+        }
+        if(!Key_GPIO_Read(Key2))
+        {
+            rt_kprintf ( "KEY2被单击\n" );
+            uwRet = rt_mb_send(test_mail, (rt_uint32_t)&test_str2);
+            if (RT_EOK == uwRet)
+                rt_kprintf ( "邮箱消息发送成功\n" );
+            else
+                rt_kprintf ( "邮箱消息发送失败\n" );
         }
         rt_thread_delay(20);
     }
 }
 
-static void swtmr1_callback(void* parameter)
-{
-    uint32_t tick_num1;
-    
-    TmrCb_Count1++;
-    tick_num1 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
-    rt_kprintf("swtmr1_callback函数执行 %d 次\n", TmrCb_Count1);
-    rt_kprintf("滴答定时器数值=%d\n", tick_num1);
-}
+//static void swtmr1_callback(void* parameter)
+//{
+//    uint32_t tick_num1;
+//    
+//    TmrCb_Count1++;
+//    tick_num1 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
+//    rt_kprintf("swtmr1_callback函数执行 %d 次\n", TmrCb_Count1);
+//    rt_kprintf("滴答定时器数值=%d\n", tick_num1);
+//}
 
-static void swtmr2_callback(void* parameter)
-{
-    uint32_t tick_num2;
-    
-    TmrCb_Count2++;
-    tick_num2 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
-    rt_kprintf("swtmr2_callback函数执行 %d 次\n", TmrCb_Count2);
-    rt_kprintf("滴答定时器数值=%d\n", tick_num2);
-}
+//static void swtmr2_callback(void* parameter)
+//{
+//    uint32_t tick_num2;
+//    
+//    TmrCb_Count2++;
+//    tick_num2 = (uint32_t)rt_tick_get();  /* 获取滴答定时器的计数值 */
+//    rt_kprintf("swtmr2_callback函数执行 %d 次\n", TmrCb_Count2);
+//    rt_kprintf("滴答定时器数值=%d\n", tick_num2);
+//}
 
 /* Main program */
 int main(void)
@@ -371,10 +402,16 @@ int main(void)
 //    if (test_mux != RT_NULL)
 //        rt_kprintf("互斥量创建成功！\n\n");
     
-    test_event = rt_event_create("test_event",  /* 事件标志组名字 */
-                                 RT_IPC_FLAG_PRIO);  /* 事件模式 FIFO(0x00)*/
-    if (test_event != RT_NULL)
-        rt_kprintf("事件创建成功！\n\n");
+//    test_event = rt_event_create("test_event",  /* 事件标志组名字 */
+//                                 RT_IPC_FLAG_PRIO);  /* 事件模式 FIFO(0x00)*/
+//    if (test_event != RT_NULL)
+//        rt_kprintf("事件创建成功！\n\n");
+    
+    test_mail = rt_mb_create("test_mail",  /* 邮箱名字 */
+                             10,  /* 邮箱大小 */
+                             RT_IPC_FLAG_FIFO);  /* 信号量模式 FIFO(0x00)*/
+    if (test_mail != RT_NULL)
+        rt_kprintf("邮箱创建成功！\n\n");
     
     receive_thread_t =
         rt_thread_create( "receive",
@@ -400,21 +437,21 @@ int main(void)
     else
         return -1;
     
-    swtmr1 = rt_timer_create("swtmr1_callback",  /* 软件定时器的名称 */
-                             swtmr1_callback,  /* 软件定时器的超时函数 */
-                             0,  /* 定时器超时函数的入口参数 */
-                             5000,  /* 软件定时器的超时时间(周期超时时间) */
-                             RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);  /* 一次模式 软件定时器模式 */
-    if (swtmr1 != RT_NULL)
-        rt_timer_start(swtmr1);
+//    swtmr1 = rt_timer_create("swtmr1_callback",  /* 软件定时器的名称 */
+//                             swtmr1_callback,  /* 软件定时器的超时函数 */
+//                             0,  /* 定时器超时函数的入口参数 */
+//                             5000,  /* 软件定时器的超时时间(周期超时时间) */
+//                             RT_TIMER_FLAG_ONE_SHOT | RT_TIMER_FLAG_SOFT_TIMER);  /* 一次模式 软件定时器模式 */
+//    if (swtmr1 != RT_NULL)
+//        rt_timer_start(swtmr1);
     
-    swtmr2 = rt_timer_create("swtmr2_callback",
-                             swtmr2_callback,
-                             0,
-                             1000,
-                             RT_TIMER_FLAG_PERIODIC | RT_TIMER_FLAG_SOFT_TIMER);  /* 周期模式 */
-    if (swtmr2 != RT_NULL)
-        rt_timer_start(swtmr2);
+//    swtmr2 = rt_timer_create("swtmr2_callback",
+//                             swtmr2_callback,
+//                             0,
+//                             1000,
+//                             RT_TIMER_FLAG_PERIODIC | RT_TIMER_FLAG_SOFT_TIMER);  /* 周期模式 */
+//    if (swtmr2 != RT_NULL)
+//        rt_timer_start(swtmr2);
     
 	/* Infinite loop */
 //	while(1)

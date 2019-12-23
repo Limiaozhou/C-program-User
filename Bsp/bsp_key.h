@@ -26,8 +26,8 @@
 
 typedef enum
 {
-	KEY0 = 0,
-    KEY1,
+	Key1 = 0,
+    Key2,
 	number_of_key
 }KEY_GPIO_Port;  //¶Ë¿ÚºÅ
 
