@@ -1,16 +1,20 @@
 #include "bsp_times.h"
 #include "stdlib.h"  //包含NULL
 
+static Timer_PortInfo Timer_PortInfoList[number_of_timer] = {NULL};
+
 static uint32_t tim3_ticks = 0;  //时间滴答
 static uint32_t time3_interval = 1;  //时间间隔
 static void (*time3_interval_task_cb)(uint32_t time_interval) = (void *)NULL;
 
+static void Timer_BaseInit(Timer_BaseType * pTimer_Base);  //定时器配置
+
 void TIM3_Init(uint16_t prescaler, uint16_t period, void (*time3_task)(uint32_t time_interval))
 {
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);  //时钟使能
+	
 	
     TIM_TimeBaseStructure.TIM_Prescaler = prescaler;  //设置用来作为TIMx时钟频率除数的预分频值
 	TIM_TimeBaseStructure.TIM_Period = period;  //设置在下一个更新事件装入活动的自动重装载寄存器周期的值	
@@ -30,6 +34,13 @@ void TIM3_Init(uint16_t prescaler, uint16_t period, void (*time3_task)(uint32_t 
     time3_interval_task_cb = time3_task;
 	
 	TIM_Cmd(TIM3, ENABLE);  //使能TIMx
+}
+
+static void Timer_BaseInit(Timer_BaseType * pTimer_Base)
+{
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);  //时钟使能
 }
 
 //定时器3中断服务程序
