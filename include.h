@@ -14,6 +14,6 @@
 
 #include "app_uart.h"
 
-#include "rtthread.h"
+//#include "rtthread.h"
 
 #endif
