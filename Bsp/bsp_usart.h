@@ -18,14 +18,6 @@
 
 //#include "data_typedef.h"
 
-//数据类型声明
-//typedef unsigned char uint8_t;
-//typedef signed char int8_t;
-//typedef unsigned int uint16_t;
-//typedef signed int int16_t;  //8位机int为16,32位机int为32
-//typedef unsigned long int uint32_t;
-//typedef signed long int int32_t;
-
 typedef enum
 {
 	Uart1 = 0,
@@ -179,6 +171,6 @@ void Uart_PriorityTask_Regist(Uart_Port uartx, void (*uart_task)(uint8_t * pdata
 void uart_write(Uart_Port uartx, uint8_t * pdata, uint32_t len);
 void uart_read(Uart_Port uartx, void (*uart_task)(uint8_t * pdata, uint32_t len));
 
-void uart_send_loop(Uart_Port uartx);  //串口发送循环，不使用DMA和不是用立即阻塞发送，需启用
+void uart_nodma_send_loop(Uart_Port uartx);  //串口发送循环，不使用DMA和不是用立即阻塞发送，需启用
 
 #endif

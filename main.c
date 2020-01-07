@@ -45,11 +45,11 @@ int main(void)
     Led_GPIO_Init();
     Key_GPIO_Init();
     Timer_Init(Timer3, 719, 99);  //720 * 100 / 72000000 = 0.001s = 1ms
-    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1，115200，发送、接收缓存大小200，中断发送模式
+    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1，115200，接收、发送缓存大小200，中断发送模式
     Uart_Init(Uart2, 115200, 50, 50, UartTx_Interrupt_Sel);
     Uart_Init(Uart3, 9600, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart4, 115200, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart5, 115200, 50, 200, UartTx_Interrupt_Sel);
+    Uart_Init(Uart4, 115200, 50, 200, UartTx_Interrupt_Sel);
+    Uart_Init(Uart5, 115200, 50, 50, UartTx_Interrupt_Sel);
     IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6s溢出
     
     Timer_PriorityTask_Regist(Timer3, Timer_Update, 1);  //注册定时器3中断任务，传入时间间隔1
@@ -57,7 +57,7 @@ int main(void)
     timer_task_start(10000, 10000, 0, network_data_write);
     timer_task_start(2000, 2000, 0, sensor_485_write);
     timer_task_start(100, 100, 0, sensor_485_read);
-    timer_task_start(100, 100, 0, uart_debug_send);
+    timer_task_start(100, 100, 0, debug_uart_nodma_send);
     
 	/* Infinite loop */
 	while(1)

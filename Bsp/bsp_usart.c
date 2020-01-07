@@ -291,7 +291,7 @@ void uart_write(Uart_Port uartx, uint8_t * pdata, uint32_t len)
 }
 
 //串口发送循环，不使用DMA和不是用立即阻塞发送，需启用
-void uart_send_loop(Uart_Port uartx)
+void uart_nodma_send_loop(Uart_Port uartx)
 {
     if( (uartx < number_of_uart) && Uart_PortInfoList[uartx].USARTx &&\
         (!Uart_PortInfoList[uartx].DMAy_Channelx_Tx) && (Uart_PortInfoList[uartx].UartTx_Mode_Sel != UartTx_ImmediatelyBlock_Sel) )

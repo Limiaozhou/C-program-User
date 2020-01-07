@@ -2,6 +2,7 @@
 #define __APP_UART_H
 
 #include "bsp_usart.h"
+#include "data_typedef.h"
 
 /*** 传感数据结构体 ***/
 typedef struct
@@ -20,22 +21,24 @@ typedef struct
     SendData_Item humi;  //湿度
 //    SendData_Item light;  //光照
 //    SendData_Item co2;
-//    SendData_Item pm25;  //pm2.5
+    SendData_Item pm25;  //pm2.5
+    SendData_Item pm10;  //pm10
+    SendData_Item noise;  //噪声
 //    SendData_Item ultvio;  //紫外线
 //    SendData_Item tvoc;  //有机气体
-//    SendData_Item fs;  //风速
-//    SendData_Item fx;  //风向
+    SendData_Item fs;  //风速
+    SendData_Item fx;  //风向
 //    SendData_Item so2;
-//    SendData_Item pressure;  //气压
+    SendData_Item pressure;  //气压
 //    SendData_Item yuxue;  //是否有雨雪
 //    SendData_Item turbidity;  //浊度
 //    SendData_Item ca;
-    SendData_Item ph;
+//    SendData_Item ph;
 //    SendData_Item Do;  //溶解氧
-    SendData_Item nh4;  //氨氮
-    SendData_Item phosphorus;  //磷
-    SendData_Item potassium;  //钾
-    SendData_Item EC;  //电导率
+//    SendData_Item nh4;  //氨氮
+//    SendData_Item phosphorus;  //磷
+//    SendData_Item potassium;  //钾
+//    SendData_Item EC;  //电导率
 //    SendData_Item rainfall;  //雨量
 //    SendData_Item h2s;  //H2S
     
@@ -106,23 +109,11 @@ typedef enum
     num_of_sensor_485
 }Sensor_485_Type;
 
-typedef union
-{
-    float data;
-    struct
-    {
-        uint8_t byte1;
-        uint8_t byte2;
-        uint8_t byte3;
-        uint8_t byte4;
-    }byte;
-}Float_Byte;
-
 void network_data_write(void);
 
 void sensor_485_write(void);
 void sensor_485_read(void);
 
-void uart_debug_send(void);
+void debug_uart_nodma_send(void);
 
 #endif

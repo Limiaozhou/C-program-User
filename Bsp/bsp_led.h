@@ -11,13 +11,6 @@
 #endif
 
 //#include "data_typedef.h"  //数据类型声明
-//数据类型声明
-// typedef unsigned char uint8_t;
-// typedef signed char int8_t;
-// typedef unsigned int uint16_t;
-// typedef signed int int16_t;  //8位机int丿16,32位机int丿32
-// typedef unsigned long int uint32_t;
-// typedef signed long int int32_t;
 
 #define LED_GPIO_LIST {\
 {.GPIOx = GPIOA, .Pin = GPIO_Pin_4, .active_level = 0, .RCC_APB2Periph = RCC_APB2Periph_GPIOA},\
