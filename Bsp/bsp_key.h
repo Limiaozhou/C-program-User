@@ -10,7 +10,7 @@
 #elif defined STM8
 #endif
 
-//#include "typedef.h"  //数据类型声明
+//#include "data_typedef.h"  //数据类型声明
 //数据类型声明
 // typedef unsigned char uint8_t;
 // typedef signed char int8_t;

@@ -66,22 +66,24 @@ typedef struct
     float humi;  //湿度
 //    float light;  //光照
 //    float co2;
-//    float pm25;  //pm2.5
+    float pm25;  //pm2.5
+    float pm10;  //pm10
+    float noise;  //噪声
 //    float ultvio;  //紫外线
 //    float tvoc;  //有机气体
-//    float fs;  //风速
-//    float fx;  //风向
+    float fs;  //风速
+    float fx;  //风向
 //    float so2;
-//    float pressure;  //气压
+    float pressure;  //气压
 //    float yuxue;  //是否有雨雪
 //    float turbidity;  //浊度
 //    float ca;
-    float ph;
+//    float ph;
 //    float Do;  //溶解氧
-    float nh4;  //氨氮
-    float phosphorus;  //磷
-    float potassium;  //钾
-    float EC;  //电导率
+//    float nh4;  //氨氮
+//    float phosphorus;  //磷
+//    float potassium;  //钾
+//    float EC;  //电导率
 //    float rainfall;  //雨量
 //    float h2s;
     

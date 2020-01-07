@@ -6,7 +6,7 @@
 #define UART_SENSOR Uart3
 #define UART_DEBUG Uart5
 
-static uint8_t net_addr[8] = { 0x4F, 0x45, 0x41, 0x03, 0x00, 0x1A, 0x00, 0x00 };  //硬件编号地址
+static uint8_t net_addr[8] = { 0x4F, 0x45, 0x41, 0x03, 0x00, 0x32, 0x00, 0x00 };  //硬件编号地址
 static Sensor_Data sensor;  //传感器联合数据
 static Sensor_485_Type sensor_type = Sensor485_1;  //传感器类型
 static uint8_t resend_num = 0;  //重发次数
@@ -175,39 +175,38 @@ static void mb_rtu_read_holdreg(uint8_t * pbuf, uint8_t dev_adr, uint8_t func, u
 static void sensor_485_deal(uint8_t * pdata, uint32_t len)
 {
 //    Float_Byte float_data;
+    uint32_t check_len = 0;  //要校验的帧数据长度
     
     uart_write( UART_DEBUG, pdata, len );
     
-    while(len--)
+    while(len)
     {
-        switch(*pdata)
+        switch(*pdata)  //头校验
         {
-            case 0x01 :  //头校验
-                if( !check_crc16_modbus_calc(pdata, *(pdata + 2) + 5) )  //crc16校验，为0表示通过
+            case 0x01 :
+                check_len = *(pdata + 2) + 5;
+                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )  //crc16校验为0表示通过
                 {
-//                    float_data.byte.byte1 = *(pdata + 4);
-//                    float_data.byte.byte2 = *(pdata + 3);
-//                    float_data.byte.byte3 = *(pdata + 6);
-//                    float_data.byte.byte4 = *(pdata + 5);
-//                    sensor.turbidity = float_data.data;
-                    
                     sensor.ph = *(pdata + 4);
                     sensor.ph += (uint32_t)*(pdata + 3) << 8;
                     sensor.ph /= 100;
                     
                     sensor_485_type_loop();
+                    
+                    pdata += check_len;
+                    len -= check_len;
+                }
+                else
+                {
+                    ++pdata;
+                    --len;
                 }
             break;
             
             case 0x02 :
-                if( !check_crc16_modbus_calc(pdata, *(pdata + 2) + 5) )
+                check_len = *(pdata + 2) + 5;
+                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
-//                    float_data.byte.byte1 = *(pdata + 4);
-//                    float_data.byte.byte2 = *(pdata + 3);
-//                    float_data.byte.byte3 = *(pdata + 6);
-//                    float_data.byte.byte4 = *(pdata + 5);
-//                    sensor.ca = float_data.data;
-                    
                     sensor.phosphorus = *(pdata + 4);
                     sensor.phosphorus += (uint32_t)*(pdata + 3) << 8;
                     sensor.nh4 = *(pdata + 6);
@@ -216,25 +215,21 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                     sensor.potassium += (uint32_t)*(pdata + 7) << 8;
                     
                     sensor_485_type_loop();
+                    
+                    pdata += check_len;
+                    len -= check_len;
+                }
+                else
+                {
+                    ++pdata;
+                    --len;
                 }
             break;
             
             case 0x03 :
-                if( !check_crc16_modbus_calc(pdata, *(pdata + 2) + 5) )
+                check_len = *(pdata + 2) + 5;
+                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
-//                    sensor.ph = *(pdata + 4);
-//                    sensor.ph += (uint32_t)*(pdata + 3) << 8;
-//                    sensor.ph /= 100;
-//                    sensor.Do = *(pdata + 6);
-//                    sensor.Do += (uint32_t)*(pdata + 5) << 8;
-//                    sensor.Do /= 100;
-//                    sensor.nh4 = *(pdata + 8);
-//                    sensor.nh4 += (uint32_t)*(pdata + 7) << 8;
-//                    sensor.nh4 /= 100;
-//                    sensor.temp = *(pdata + 10);
-//                    sensor.temp += (uint32_t)*(pdata + 9) << 8;
-//                    sensor.temp /= 100;
-                    
                     sensor.humi = *(pdata + 4);
                     sensor.humi += (uint32_t)*(pdata + 3) << 8;
                     sensor.humi /= 10;
@@ -245,10 +240,21 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                     sensor.EC += (uint32_t)*(pdata + 7) << 8;
                     
                     sensor_485_type_loop();
+                    
+                    pdata += check_len;
+                    len -= check_len;
+                }
+                else
+                {
+                    ++pdata;
+                    --len;
                 }
             break;
+            
+            default :
+                ++pdata;
+                --len;
+            break;
         }
-        
-        ++pdata;
     }
 }
