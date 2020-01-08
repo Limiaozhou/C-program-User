@@ -134,7 +134,7 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
         {
             case 0x01 :
                 check_len = *(pdata + 2) + 5;
-                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )  //crc16校验为0表示通过
+                if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )  //crc16校验为0表示通过
                 {
                     sensor.humi = *(pdata + 4);
                     sensor.humi += (uint32_t)*(pdata + 3) << 8;
@@ -169,7 +169,7 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
             
             case 0x02 :
                 check_len = *(pdata + 2) + 5;
-                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
+                if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
                     sensor.fx = *(pdata + 4);
                     sensor.fx += (uint32_t)*(pdata + 3) << 8;
@@ -188,7 +188,7 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
             
             case 0x03 :
                 check_len = *(pdata + 2) + 5;
-                if( (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
+                if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
                     sensor.fs = *(pdata + 4);
                     sensor.fs += (uint32_t)*(pdata + 3) << 8;
