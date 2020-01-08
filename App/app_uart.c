@@ -123,9 +123,10 @@ static void sensor_485_type_loop(void)
 //处理485传感器数据
 static void sensor_485_deal(uint8_t * pdata, uint32_t len)
 {
-//    Float_Byte float_data;
+//    Float_Byte data_float;
     uint32_t check_len = 0;  //要校验的帧数据长度
-    int16_t data = 0;
+    int16_t data_int16 = 0;
+    uint32_t data_uint32 = 0;
     
     uart_write( UART_DEBUG, pdata, len );
     
@@ -137,24 +138,32 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                 check_len = *(pdata + 2) + 5;
                 if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )  //crc16校验为0表示通过
                 {
-                    sensor.humi = *(pdata + 4);
-                    sensor.humi += (uint32_t)*(pdata + 3) << 8;
-                    sensor.humi /= 10;
-                    data = *(pdata + 6);
-                    data += (int16_t)*(pdata + 5) << 8;
-                    sensor.temp = (float)data / 10;
-                    sensor.pm25 = *(pdata + 12);
-                    sensor.pm25 += (uint32_t)*(pdata + 11) << 8;
-                    sensor.pm10 = *(pdata + 22);
-                    sensor.pm10 += (uint32_t)*(pdata + 21) << 8;
-                    sensor.pressure = *(pdata + 26);
-                    sensor.pressure += (uint32_t)*(pdata + 25) << 8;
-                    sensor.pressure += (uint32_t)*(pdata + 24) << 16;
-                    sensor.pressure += (uint32_t)*(pdata + 23) << 24;
-                    sensor.pressure /= 1000;
-                    sensor.noise = *(pdata + 28);
-                    sensor.noise += (uint32_t)*(pdata + 27) << 8;
-                    sensor.noise /= 10;
+                    data_uint32 = *(pdata + 4) + ((uint32_t)*(pdata + 3) << 8);
+                    if(data_uint32 <= 1000)
+                        sensor.humi = data_uint32 / 10.0;
+                    
+                    data_int16 = *(pdata + 6) + ((int16_t)*(pdata + 5) << 8);
+                    if((data_int16 >= -400) && (data_int16 <= 800))
+                        sensor.temp = data_int16 / 10.0;
+                    
+                    data_uint32 = *(pdata + 12) + ((uint32_t)*(pdata + 11) << 8);
+                    if(data_uint32 <= 999)
+                        sensor.pm25 = data_uint32;
+                    
+                    data_uint32 = *(pdata + 22) + ((uint32_t)*(pdata + 21) << 8);
+                    if(data_uint32 <= 999)
+                        sensor.pm10 = data_uint32;
+                    
+                    data_uint32 = *(pdata + 26);
+                    data_uint32 += (uint32_t)*(pdata + 25) << 8;
+                    data_uint32 += (uint32_t)*(pdata + 24) << 16;
+                    data_uint32 += (uint32_t)*(pdata + 23) << 24;
+                    if((data_uint32 >= 1000) && (data_uint32 <= 120000))
+                        sensor.pressure = data_uint32 / 1000.0;
+                    
+                    data_uint32 = *(pdata + 28) + ((uint32_t)*(pdata + 27) << 8);
+                    if((data_uint32 >= 300) && (data_uint32 <= 1300))
+                        sensor.noise = data_uint32 / 10.0;
                     
                     sensor_485_type_loop();
                     
@@ -172,8 +181,9 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                 check_len = *(pdata + 2) + 5;
                 if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
-                    sensor.fx = *(pdata + 4);
-                    sensor.fx += (uint32_t)*(pdata + 3) << 8;
+                    data_uint32 = *(pdata + 4) + ((uint32_t)*(pdata + 3) << 8);
+                    if(data_uint32 <= 360)
+                        sensor.fx = data_uint32;
                     
                     sensor_485_type_loop();
                     
@@ -191,9 +201,9 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                 check_len = *(pdata + 2) + 5;
                 if( (len >= 7) && (len >= check_len) && (!check_crc16_modbus_calc(pdata, check_len)) )
                 {
-                    sensor.fs = *(pdata + 4);
-                    sensor.fs += (uint32_t)*(pdata + 3) << 8;
-                    sensor.fs /= 10;
+                    data_uint32 = *(pdata + 4) + ((uint32_t)*(pdata + 3) << 8);
+                    if(data_uint32 <= 300)
+                        sensor.fs = data_uint32 / 10.0;
                     
                     sensor_485_type_loop();
                     
