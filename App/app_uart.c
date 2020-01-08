@@ -125,6 +125,7 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
 {
 //    Float_Byte float_data;
     uint32_t check_len = 0;  //要校验的帧数据长度
+    int16_t data = 0;
     
     uart_write( UART_DEBUG, pdata, len );
     
@@ -139,9 +140,9 @@ static void sensor_485_deal(uint8_t * pdata, uint32_t len)
                     sensor.humi = *(pdata + 4);
                     sensor.humi += (uint32_t)*(pdata + 3) << 8;
                     sensor.humi /= 10;
-                    sensor.temp = *(pdata + 6);
-                    sensor.temp += (int32_t)*(pdata + 5) << 8;
-                    sensor.temp /= 10;
+                    data = *(pdata + 6);
+                    data += (int16_t)*(pdata + 5) << 8;
+                    sensor.temp = (float)data / 10;
                     sensor.pm25 = *(pdata + 12);
                     sensor.pm25 += (uint32_t)*(pdata + 11) << 8;
                     sensor.pm10 = *(pdata + 22);
