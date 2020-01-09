@@ -9,6 +9,7 @@
 #include "bsp_key.h"
 #include "bsp_usart.h"
 #include "bsp_iwdg.h"
+#include "bsp_bluetooth.h"
 
 #include "mid_timers.h"
 
