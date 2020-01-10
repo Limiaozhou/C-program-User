@@ -49,13 +49,14 @@ int main(void)
     Uart_Init(Uart4, 115200, 50, 50, UartTx_Interrupt_Sel);
     Uart_Init(Uart5, 115200, 50, 50, UartTx_Interrupt_Sel);
     IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6s溢出
-    BTControl_GPIO_Init();  //蓝牙控制引脚初始化
+    BTControl_GPIO_Init();  //蓝牙控制引脚初始化为开
     
     Timer_PriorityTask_Regist(Timer3, Timer_Update, 1);  //注册定时器3中断任务，传入时间间隔1
     
     timer_task_start(1000, 1000, 0, IWDG_Feed);  //1000ms周期，执行一次IWDG_Feed非优先任务
     timer_task_start(10, 10, 0, debug_read);
-    timer_task_start(10, 10, 0, zigbee_read);
+    timer_task_start(10, 10, 0, bluetooth_read);
+//    timer_task_start(10, 10, 0, zigbee_read);
     
 	/* Infinite loop */
 	while(1)

@@ -12,6 +12,9 @@
 
 //#include "data_typedef.h"  //数据类型声明
 
+#define BTCONTROL_GPIOX GPIOA
+#define BTCONTROL_GPIO_PIN GPIO_Pin_8
+
 typedef enum
 {
 	BTControl_On = 0,

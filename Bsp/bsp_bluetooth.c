@@ -9,8 +9,8 @@ void BTControl_GPIO_Init(void)
     
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8;
-    GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.GPIO_Pin = BTCONTROL_GPIO_PIN;
+    GPIO_Init(BTCONTROL_GPIOX, &GPIO_InitStruct);
     
     BTControl_GPIO_Write(BTControl_On);  //初始打开蓝牙透传控制引脚
 }
@@ -21,11 +21,11 @@ void BTControl_GPIO_Write(BTControl_GPIO_OutState state)
     uint8_t bitstatus_read = 0;
     
     if(state != BTControl_Toggle)  //不是电平翻转
-        GPIO_WriteBit(GPIOA, GPIO_Pin_8, (BitAction)state);
+        GPIO_WriteBit(BTCONTROL_GPIOX, BTCONTROL_GPIO_PIN, (BitAction)state);
     else
     {
         bitstatus_read = BTControl_GPIO_Read();
-        GPIO_WriteBit(GPIOA, GPIO_Pin_8, (BitAction)!bitstatus_read);
+        GPIO_WriteBit(BTCONTROL_GPIOX, BTCONTROL_GPIO_PIN, (BitAction)!bitstatus_read);
     }
 }
 
@@ -33,7 +33,7 @@ uint8_t BTControl_GPIO_Read(void)
 {
     uint8_t bitstatus = 0;
     
-    bitstatus = GPIO_ReadOutputDataBit(GPIOA, GPIO_Pin_8);
+    bitstatus = GPIO_ReadOutputDataBit(BTCONTROL_GPIOX, BTCONTROL_GPIO_PIN);
     
     return bitstatus;
 }
