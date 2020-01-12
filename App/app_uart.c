@@ -10,7 +10,7 @@
 #define CONFIG_ZIGBEE_EVENT 0x02
 
 static uint8_t bluetooth_config_mutex = 0;  //蓝牙配置互斥量，初始不可用，等待蓝牙连接后释放
-static uint8_t zigbee_config_mutex = 0;  //zigbee配置互斥量
+static uint8_t zigbee_config_mutex = 1;  //zigbee配置互斥量
 
 static uint8_t bluetooth_config_flag = 0;  //蓝牙配置标志，连接后才能指令退出配置模式
 
