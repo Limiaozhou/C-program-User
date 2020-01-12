@@ -5,8 +5,9 @@
 #include "data_typedef.h"
 
 #define UART_NET Uart1
+#define UART_NET_2 Uart4
 #define UART_SENSOR Uart3
-#define UART_DEBUG Uart4
+#define UART_DEBUG Uart5
 
 static uint8_t net_addr[8] = { 0x4F, 0x45, 0x41, 0x03, 0x00, 0x32, 0x00, 0x00 };  //硬件编号地址
 static Sensor_Data sensor;  //传感器联合数据
@@ -68,6 +69,7 @@ void network_data_write(void)
 	send_netdata.crc16 = check_crc16_modbus_calc(&send_netdata.ver, send_netdata.len - 2);  //从ver开始crc校验
     
     uart_write( UART_NET, (uint8_t *)&send_netdata, sizeof(send_netdata) );
+    uart_write( UART_NET_2, (uint8_t *)&send_netdata, sizeof(send_netdata) );
     uart_write( UART_DEBUG, (uint8_t *)&send_netdata, sizeof(send_netdata) );
     uart_write( UART_DEBUG, (uint8_t *)&sensor, sizeof(sensor) );
 }
