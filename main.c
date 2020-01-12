@@ -56,7 +56,7 @@ int main(void)
     timer_task_start(1000, 1000, 0, IWDG_Feed);  //1000ms周期，执行一次IWDG_Feed非优先任务
     timer_task_start(10, 10, 0, debug_read);
     timer_task_start(10, 10, 0, bluetooth_read);
-//    timer_task_start(10, 10, 0, zigbee_read);
+    timer_task_start(10, 10, 0, zigbee_read);
     
 	/* Infinite loop */
 	while(1)
