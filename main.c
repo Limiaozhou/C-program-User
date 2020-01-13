@@ -60,6 +60,7 @@ int main(void)
     timer_task_start(10, 10, 0, zigbee_read);
     timer_task_start(10, 10, 0, lora_send_loop);
     timer_task_start(10, 10, 0, lora_read);
+    timer_task_start(10, 10, 0, router_read);
     
 	/* Infinite loop */
 	while(1)

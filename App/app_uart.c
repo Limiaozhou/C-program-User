@@ -7,6 +7,7 @@
 #define UART_ZIGBEE Uart2
 #define UART_DEBUG Uart3
 #define UART_LORA Uart5
+#define UART_ROUTER Uart4
 
 #define CONFIG_BLUETOOTH_EVENT 0x01  //蓝牙配置事件
 #define CONFIG_ZIGBEE_EVENT 0x02
@@ -22,6 +23,7 @@ static void debug_deal(uint8_t * pdata, uint32_t len);  //处理debug数据
 static void zigbee_deal(uint8_t * pdata, uint32_t len);  //处理蓝牙数据
 static void bluetooth_deal(uint8_t * pdata, uint32_t len);  //处理zigbee数据
 static void lora_deal(uint8_t * pdata, uint32_t len);  //处理lora数据
+static void router_deal(uint8_t * pdata, uint32_t len);  //处理路由器数据
 
 //接收处理debug数据
 void debug_read(void)
@@ -41,16 +43,22 @@ void zigbee_read(void)
     uart_read(UART_ZIGBEE, zigbee_deal);
 }
 
+//lora串口发送循环，因为没使用DMA和不是用立即阻塞发送模式，需循环调用
+void lora_send_loop(void)
+{
+    uart_nodma_send_loop(UART_LORA);
+}
+
 //接收处理lora数据
 void lora_read(void)
 {
     uart_read(UART_LORA, lora_deal);
 }
 
-//lora串口发送循环，因为没使用DMA和不是用立即阻塞发送模式，需循环调用
-void lora_send_loop(void)
+//接收处理路由器数据
+void router_read(void)
 {
-    uart_nodma_send_loop(UART_LORA);
+    uart_read(UART_ROUTER, router_deal);
 }
 
 //处理debug数据
@@ -116,6 +124,7 @@ static void debug_deal(uint8_t * pdata, uint32_t len)
         if(lora_config_mutex)
             uart_write( UART_LORA, pdata, len );
     }
+    uart_write( UART_ROUTER, pdata, len );
 }
 
 //处理蓝牙数据
@@ -171,6 +180,7 @@ static void bluetooth_deal(uint8_t * pdata, uint32_t len)
             uart_write( UART_LORA, pdata, len );
     }
     uart_write( UART_DEBUG, pdata, len );
+    uart_write( UART_ROUTER, pdata, len );
 }
 
 //处理zigbee数据
@@ -219,8 +229,10 @@ static void zigbee_deal(uint8_t * pdata, uint32_t len)
             uart_write( UART_LORA, pdata, len );
     }
     uart_write( UART_DEBUG, pdata, len );
+    uart_write( UART_ROUTER, pdata, len );
 }
 
+//处理lora数据
 static void lora_deal(uint8_t * pdata, uint32_t len)
 {
     static uint8_t device_config_event = 0;  //设备配置事件
@@ -263,6 +275,73 @@ static void lora_deal(uint8_t * pdata, uint32_t len)
             uart_write( UART_BLUETOOTH, pdata, len );
         if(zigbee_config_mutex)
             uart_write( UART_ZIGBEE, pdata, len );
+    }
+    uart_write( UART_DEBUG, pdata, len );
+    uart_write( UART_ROUTER, pdata, len );
+}
+
+//处理路由器数据
+static void router_deal(uint8_t * pdata, uint32_t len)
+{
+    static uint8_t device_config_event = 0;  //设备配置事件
+    
+    if(strcmp((char*)pdata, "++bluetooth") == 0)
+    {  //收到开始配置蓝牙信息
+        bluetooth_config_mutex = 0;
+        device_config_event |= CONFIG_BLUETOOTH_EVENT;
+    }
+    else if((strcmp((char*)pdata, "--bluetooth") == 0) && (device_config_event & CONFIG_BLUETOOTH_EVENT))
+    {  //收到结束配置蓝牙信息
+        if(bluetooth_config_flag)
+            bluetooth_config_mutex = 1;
+        device_config_event &= ~CONFIG_BLUETOOTH_EVENT;
+    }
+    else if(strcmp((char*)pdata, "++zigbee") == 0)
+    {
+        zigbee_config_mutex = 0;
+        device_config_event |= CONFIG_ZIGBEE_EVENT;
+    }
+    else if((strcmp((char*)pdata, "--zigbee") == 0) && (device_config_event & CONFIG_ZIGBEE_EVENT))
+    {
+        zigbee_config_mutex = 1;
+        device_config_event &= ~CONFIG_ZIGBEE_EVENT;
+    }
+    else if(strcmp((char*)pdata, "++lora") == 0)
+    {
+        lora_config_mutex = 0;
+        device_config_event |= CONFIG_LORA_EVENT;
+        lora_mode_control(LoraMode_Configure);  //lora模块到配置模式
+    }
+    else if((strcmp((char*)pdata, "--lora") == 0) && (device_config_event & CONFIG_LORA_EVENT))
+    {
+        lora_config_mutex = 1;
+        device_config_event &= ~CONFIG_LORA_EVENT;
+        lora_mode_control(LoraMode_Transmission);  //lora模块到透传模式
+    }
+    
+    if(device_config_event & CONFIG_BLUETOOTH_EVENT)
+    {
+        uart_write( UART_ROUTER, "bluetooth config\r\n", strlen("bluetooth config\r\n") );
+        uart_write( UART_BLUETOOTH, pdata, len );
+    }
+    else if(device_config_event & CONFIG_ZIGBEE_EVENT)
+    {
+        uart_write( UART_ROUTER, "zigbee config\r\n", strlen("zigbee config\r\n") );
+        uart_write( UART_ZIGBEE, pdata, len );
+    }
+    else if(device_config_event & CONFIG_LORA_EVENT)
+    {
+        uart_write( UART_ROUTER, "lora config\r\n", strlen("lora config\r\n") );
+        uart_write( UART_LORA, pdata, len );
+    }
+    else
+    {
+        if(bluetooth_config_mutex)
+            uart_write( UART_BLUETOOTH, pdata, len );
+        if(zigbee_config_mutex)
+            uart_write( UART_ZIGBEE, pdata, len );
+        if(lora_config_mutex)
+            uart_write( UART_LORA, pdata, len );
     }
     uart_write( UART_DEBUG, pdata, len );
 }
