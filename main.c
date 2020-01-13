@@ -43,21 +43,23 @@ int main(void)
     
 	Delay_Init(72);  //延时函数基准配置
     Timer_Init(Timer3, 719, 99);  //720 * 100 / 72000000 = 0.001s = 1ms
-    Uart_Init(Uart1, 115200, 50, 50, UartTx_Interrupt_Sel);  //usart1，115200，接收、发送缓存大小50，中断发送模式
-    Uart_Init(Uart2, 115200, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart3, 115200, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart4, 115200, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart5, 115200, 50, 50, UartTx_Interrupt_Sel);
+    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1，115200，接收、发送缓存大小50，中断发送模式
+    Uart_Init(Uart2, 115200, 200, 200, UartTx_Interrupt_Sel);
+    Uart_Init(Uart3, 115200, 200, 200, UartTx_Interrupt_Sel);
+    Uart_Init(Uart4, 115200, 200, 200, UartTx_Interrupt_Sel);
+    Uart_Init(Uart5, 9600, 200, 200, UartTx_Interrupt_Sel);
     IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6s溢出
     BTControl_GPIO_Init();  //蓝牙控制引脚初始化，为开
     LoraControl_GPIO_Init();  //lora控制引脚初始化，为透传
     
     Timer_PriorityTask_Regist(Timer3, Timer_Update, 1);  //注册定时器3中断任务，传入时间间隔1
-    
+    lora_mode_control(LoraMode_Transmission);
     timer_task_start(1000, 1000, 0, IWDG_Feed);  //1000ms周期，执行一次IWDG_Feed非优先任务
     timer_task_start(10, 10, 0, debug_read);
     timer_task_start(10, 10, 0, bluetooth_read);
     timer_task_start(10, 10, 0, zigbee_read);
+    timer_task_start(10, 10, 0, lora_send_loop);
+    timer_task_start(10, 10, 0, lora_read);
     
 	/* Infinite loop */
 	while(1)
