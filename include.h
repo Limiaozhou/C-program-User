@@ -10,6 +10,7 @@
 #include "bsp_usart.h"
 #include "bsp_iwdg.h"
 #include "bsp_bluetooth.h"
+#include "bsp_lora.h"
 
 #include "mid_timers.h"
 
