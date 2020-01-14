@@ -10,7 +10,7 @@
 #elif defined STM8
 #endif
 
-//#include "data_typedef.h"  //数据类型声明
+//#include "data_typedef.h"  //鏁版嵁绫诲瀷澹版槑
 
 #define LORACONTROL_M0_GPIOX     GPIOB
 #define LORACONTROL_M0_GPIO_PIN  GPIO_Pin_3
@@ -19,14 +19,14 @@
 
 typedef enum
 {
-	LoraMode_Transmission = 0,  //透传
-	LoraMode_WOR,  //远程唤醒
-	LoraMode_Configure,  //配置
-    LoraMode_Sleep  //休眠
-}Lora_WorkMode_TypeDef;  //lora工作模式
+	LoraMode_Transmission = 0,  //閫忎紶
+	LoraMode_WOR,  //杩滅▼鍞ら啋
+	LoraMode_Configure,  //閰嶇疆
+    LoraMode_Sleep  //浼戠湢
+}Lora_WorkMode_TypeDef;  //lora宸ヤ綔妯″紡
 
 void LoraControl_GPIO_Init(void);
-void lora_mode_control(Lora_WorkMode_TypeDef mode);  //lora工作模式控制
-Lora_WorkMode_TypeDef lora_mode_read(void);  //lora工作模式读取
+void lora_mode_control(Lora_WorkMode_TypeDef mode);  //lora宸ヤ綔妯″紡鎺у埗
+Lora_WorkMode_TypeDef lora_mode_read(void);  //lora宸ヤ綔妯″紡璇诲彇
 
 #endif

@@ -1,6 +1,6 @@
 #include "bsp_lora.h"
 
-/* lora¿ØÖÆÒı½Å³õÊ¼»¯ */
+/* loraæ§åˆ¶å¼•è„šåˆå§‹åŒ– */
 void LoraControl_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -16,10 +16,10 @@ void LoraControl_GPIO_Init(void)
     GPIO_InitStruct.GPIO_Pin = LORACONTROL_M1_GPIO_PIN;
     GPIO_Init(LORACONTROL_M1_GPIOX, &GPIO_InitStruct);
     
-    lora_mode_control(LoraMode_Transmission);  //³õÊ¼´ò¿ªÀ¶ÑÀÍ¸´«¿ØÖÆÒı½Å
+    lora_mode_control(LoraMode_Transmission);  //åˆå§‹æ‰“å¼€è“ç‰™é€ä¼ æ§åˆ¶å¼•è„š
 }
 
-/* lora¹¤×÷Ä£Ê½¿ØÖÆ */
+/* loraå·¥ä½œæ¨¡å¼æ§åˆ¶ */
 void lora_mode_control(Lora_WorkMode_TypeDef mode)
 {
     switch(mode)
@@ -54,7 +54,7 @@ void lora_mode_control(Lora_WorkMode_TypeDef mode)
 Lora_WorkMode_TypeDef lora_mode_read(void)
 {
     Lora_WorkMode_TypeDef mode = LoraMode_Transmission;
-    uint8_t state = 0;  //Òı½Å×´Ì¬»º´æ
+    uint8_t state = 0;  //å¼•è„šçŠ¶æ€ç¼“å­˜
     
     state = GPIO_ReadOutputDataBit(LORACONTROL_M0_GPIOX, LORACONTROL_M0_GPIO_PIN);
     state |= (uint8_t)GPIO_ReadOutputDataBit(LORACONTROL_M1_GPIOX, LORACONTROL_M1_GPIO_PIN) << 1;
