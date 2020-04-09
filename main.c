@@ -5,7 +5,24 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+rt_uint8_t flag1;
+rt_uint8_t flag2;
+
+/* å®šä¹‰çº¿ç¨‹æ§åˆ¶å— */
+struct rt_thread rt_flag1_thread;
+struct rt_thread rt_flag2_thread;
+
+ALIGN(RT_ALIGN_SIZE)
+
+/* å®šä¹‰çº¿ç¨‹æ ˆ */
+rt_uint8_t rt_flag1_thread_stack[512];
+rt_uint8_t rt_flag2_thread_stack[512];
+
 /* Private function prototypes -----------------------------------------------*/
+void delay(uint32_t count);
+void flag1_thread_entry(void *p_arg);
+void flag2_thread_entry(void *p_arg);
+
 /* Private functions ---------------------------------------------------------*/
 //void printf_test(void)
 //{
@@ -19,51 +36,84 @@
 //    printf("Current parameters value: file %s on line %d\r\n", (uint8_t *)__FILE__, __LINE__);
 //}
 
+/* è½¯ä»¶å»¶æ—¶ */
+void delay(uint32_t count)
+{
+	for(; count!=0; count--);
+}
+
+/* çº¿ç¨‹1 */
+void flag1_thread_entry(void *p_arg)
+{
+	for(;;)
+	{
+		flag1 = 1;
+		delay(100);
+		flag1 = 0;
+		delay(100);
+		
+		/* çº¿ç¨‹åˆ‡æ¢ï¼Œè¿™é‡Œæ˜¯æ‰‹åŠ¨åˆ‡æ¢ */
+		rt_schedule();
+	}
+}
+
+/* çº¿ç¨‹2 */
+void flag2_thread_entry(void *p_arg)
+{
+	for(;;)
+	{
+		flag2 = 1;
+		delay(100);
+		flag2 = 0;
+		delay(100);
+		
+		rt_schedule();
+	}
+}
+
 /* Main program */
 int main(void)
 {
 #if defined STM32_HAL
 	/* STM32 Configure the MPU attributes as Write Through */
 	MPU_Config();
-    
+
 	/* STM32 Enable the CPU Cache */
 	CPU_CACHE_Enable();
-	
+
 	/* STM32F7xx HAL library initialization */
 	HAL_Init();
 #endif
-    
+
 	/* Configure the system clock */
 	CLK_SYSCLK_Config();
-	
+
 #if defined STM32_STANDARD
-    NVIC_PriorityGroupInit();
-    SysTick_Init();
+	NVIC_PriorityGroupInit();
+	SysTick_Init();
 #endif
-    
-	Delay_Init(72);  //ÑÓÊ±º¯Êı»ù×¼ÅäÖÃ
-    Led_GPIO_Init();
-    Key_GPIO_Init();
-    Timer_Init(Timer3, 719, 99);  //720 * 100 / 72000000 = 0.001s = 1ms
-    Uart_Init(Uart1, 115200, 200, 200, UartTx_Interrupt_Sel);  //usart1£¬115200£¬½ÓÊÕ¡¢·¢ËÍ»º´æ´óĞ¡200£¬ÖĞ¶Ï·¢ËÍÄ£Ê½
-    Uart_Init(Uart2, 115200, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart3, 9600, 50, 50, UartTx_Interrupt_Sel);
-    Uart_Init(Uart4, 115200, 50, 200, UartTx_Interrupt_Sel);
-    Uart_Init(Uart5, 115200, 50, 50, UartTx_Interrupt_Sel);
-    IWDG_Init(IWDG_Prescaler_64, 1000);  //1.6sÒç³ö
-    
-    Timer_PriorityTask_Regist(Timer3, Timer_Update, 1);  //×¢²á¶¨Ê±Æ÷3ÖĞ¶ÏÈÎÎñ£¬´«ÈëÊ±¼ä¼ä¸ô1
-    timer_task_start(1000, 1000, 0, IWDG_Feed);  //1000msÖÜÆÚ£¬Ö´ĞĞÒ»´ÎIWDG_Feed·ÇÓÅÏÈÈÎÎñ
-    timer_task_start(10000, 10000, 0, network_data_write);
-    timer_task_start(2000, 2000, 0, sensor_485_write);
-    timer_task_start(100, 100, 0, sensor_485_read);
-    timer_task_start(100, 100, 0, debug_uart_nodma_send);
-    
-	/* Infinite loop */
-	while(1)
-	{
-        timeout_task_loop();
-	}
+
+	/* è°ƒåº¦å™¨åˆå§‹åŒ– */
+	rt_system_scheduler_init();
+
+	/* åˆå§‹åŒ–çº¿ç¨‹ */
+	rt_thread_init( &rt_flag1_thread, /* çº¿ç¨‹æ§åˆ¶å— */
+					flag1_thread_entry, /* çº¿ç¨‹å…¥å£åœ°å€ */
+					RT_NULL, /* çº¿ç¨‹å½¢å‚ */
+					&rt_flag1_thread_stack[0], /* çº¿ç¨‹æ ˆèµ·å§‹åœ°å€ */
+					sizeof(rt_flag1_thread_stack) ); /* çº¿ç¨‹æ ˆå¤§å°ï¼Œå•ä½ä¸ºå­—èŠ‚ */
+	/* å°†çº¿ç¨‹æ’å…¥åˆ°å°±ç»ªåˆ—è¡¨ */
+	rt_list_insert_before( &(rt_thread_priority_table[0]),&(rt_flag1_thread.tlist) );
+
+	rt_thread_init( &rt_flag2_thread,
+					flag2_thread_entry,
+					RT_NULL,
+					&rt_flag2_thread_stack[0],
+					sizeof(rt_flag2_thread_stack) );
+	rt_list_insert_before( &(rt_thread_priority_table[1]),&(rt_flag2_thread.tlist) );
+	
+	/* å¯åŠ¨ç³»ç»Ÿè°ƒåº¦å™¨ */
+	rt_system_scheduler_start();
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
