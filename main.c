@@ -1,6 +1,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+extern rt_list_t rt_thread_priority_table[RT_THREAD_PRIORITY_MAX];
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -13,7 +15,6 @@ struct rt_thread rt_flag1_thread;
 struct rt_thread rt_flag2_thread;
 
 ALIGN(RT_ALIGN_SIZE)
-
 /* 定义线程栈 */
 rt_uint8_t rt_flag1_thread_stack[512];
 rt_uint8_t rt_flag2_thread_stack[512];
@@ -74,24 +75,24 @@ void flag2_thread_entry(void *p_arg)
 /* Main program */
 int main(void)
 {
-#if defined STM32_HAL
-	/* STM32 Configure the MPU attributes as Write Through */
-	MPU_Config();
-
-	/* STM32 Enable the CPU Cache */
-	CPU_CACHE_Enable();
-
-	/* STM32F7xx HAL library initialization */
-	HAL_Init();
-#endif
-
-	/* Configure the system clock */
-	CLK_SYSCLK_Config();
-
-#if defined STM32_STANDARD
-	NVIC_PriorityGroupInit();
-	SysTick_Init();
-#endif
+//#if defined STM32_HAL
+//	/* STM32 Configure the MPU attributes as Write Through */
+//	MPU_Config();
+//
+//	/* STM32 Enable the CPU Cache */
+//	CPU_CACHE_Enable();
+//
+//	/* STM32F7xx HAL library initialization */
+//	HAL_Init();
+//#endif
+//
+//	/* Configure the system clock */
+//	CLK_SYSCLK_Config();
+//
+//#if defined STM32_STANDARD
+//	NVIC_PriorityGroupInit();
+//	SysTick_Init();
+//#endif
 
 	/* 调度器初始化 */
 	rt_system_scheduler_init();
